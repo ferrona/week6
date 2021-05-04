@@ -14,30 +14,55 @@ let fs = require('fs')
 // defines a lambda function
 exports.handler = async function(event) {
 
+  // Have a look at the event object
+  console.log(event)
+
+  // grab the number of bedrooms from the query string parameters
+  let numBedrooms = event.queryStringParameters.bedrooms
+
+  // write out the number of bedrooms requested
+  console.log(`Number of bedrooms requested: ${numBedrooms}`)
+
   // read listings CSV file from disk
   let listingsFile = fs.readFileSync(`./listings.csv`)
   
   // turn the listings file into a JavaScript object, wait for that to happen
   let listingsFromCsv = await csv(listingsFile)
 
+  // have a look in the console
+  // console.log(listingsFromCsv)
+
   // write the number of listings (the array's length) to the back-end console
+  // console.log(`There are ${listingsFromCsv.length} listings`)
 
   // write the first few listings to the back-end console, to see what we're working with
+  // console.log(listingsFromCsv[0])
 
   // create a new object to hold the count and listings data
 
   // start with an empty Array for the listings
+  let listingsToReturn = {
+    count: 0,
+    listings: []
+  }
   
   // loop through all listings, for each one:
+  for (let i=0; i<listingsFromCsv.length; i++) {
     // store each listing in memory
+    let listing = listingsFromCsv[i]
     // check if the rating is at least 99, if so:
+    if (listing.review_scores_rating >= 99 && listing.bedrooms >= numBedrooms) {
       // add the listing to the Array of listings to return
-
+      listingsToReturn.listings.push(listing)
+      listingsToReturn.count = listingsToReturn.count + 1
+    }
+  }
   // add the number of listings to the returned listings Object
+  // listingsToReturn.count = listingsToReturn.listings.length -- this is an alternative to line 48
 
   // a lambda function returns a status code and a string of data
   return {
     statusCode: 200, // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-    body: `Hello from the back-end!` // a string of data
+    body: JSON.stringify(listingsToReturn) // a string of data
   }
 }
